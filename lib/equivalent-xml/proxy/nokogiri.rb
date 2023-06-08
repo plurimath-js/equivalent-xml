@@ -43,7 +43,7 @@ module EquivalentXml
       end
       
       def root
-        @thing.respond_to?(:document) ? @thing.document.root : nil
+        @thing.respond_to?(:document) ? self.class.proxy(@thing.document.root) : nil
       end
       
       def ignore_content?(list, opts={})

@@ -23,7 +23,7 @@ module EquivalentXml
 
     private
     def proxy_classes
-      ObjectSpace.each_object(Proxy::Base.singleton_class).to_a.reject { |klass| not klass.present? }
+      @proxy_classes ||= EquivalentXml::Proxy::Base.proxy_subclasses.reject { |klass| not klass.present? }
     end
 
     def processor_for(*args)
@@ -67,7 +67,9 @@ module EquivalentXml
 
     def compare_nodes(node_1, node_2, opts, &block)
       result = nil
-      if [node_1, node_2].any? { |node| not node.is_node? }
+      if [node_1, node_2].any? { |node| node.is_nodeset? }
+        result = compare_nodesets(node_1, node_2, opts, &block)
+      elsif [node_1, node_2].any? { |node| not node.is_node? }
         result = node_1.to_s == node_2.to_s
       elsif (node_1.class != node_2.class) or self.same_namespace?(node_1,node_2) == false
         result = false
@@ -151,6 +153,9 @@ module EquivalentXml
       local_set_1 = nodeset_1.dup
       local_set_2 = nodeset_2.dup
 
+      local_set_1 = local_set_1.reject { |i| proxy(i).is_empty_text? } if opts[:normalize_whitespace]
+      local_set_2 = local_set_2.reject { |i| proxy(i).is_empty_text? } if opts[:normalize_whitespace]
+
       if local_set_1.length != local_set_2.length
         return false
       end
@@ -197,7 +202,7 @@ module EquivalentXml
 
     private
     def as_node(data)
-      if data.respond_to?(:node_type)
+      if data.is_node?
         return data
       else
         result = data.as_fragment

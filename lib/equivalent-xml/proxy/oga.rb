@@ -59,7 +59,8 @@ module EquivalentXml
       end
       
       def root
-        @thing.respond_to?(:root_node) ? @thing.root_node.children.first : nil
+        self
+        #@thing.respond_to?(:root_node) ? self.class.proxy(@thing.root_node.children.first) : nil
       end
       
       def ignore_content?(list, opts={})

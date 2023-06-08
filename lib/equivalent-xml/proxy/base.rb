@@ -2,6 +2,13 @@ module EquivalentXml
   module Proxy
     class Base
       attr_reader :thing
+
+      @proxy_subclasses = []
+      def self.inherited(other)
+        @proxy_subclasses << other
+      end
+
+      singleton_class.attr_reader :proxy_subclasses
       
       def self.driver_name
         self.name.split(/::/).last.to_sym
@@ -47,6 +54,11 @@ module EquivalentXml
       
       def is_node?
         self.node_type > 0
+      end
+
+      def is_empty_text?
+        self.node_type == NodeType::TEXT_NODE &&
+        self.text.strip == ''
       end
       
       def to_s
